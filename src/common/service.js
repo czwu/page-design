@@ -26,10 +26,12 @@ export default {
     return http.post('/api/h5-app/label/create', param)
   },
 
-  queryApi() {
+  // 查询api列表
+  queryApi(params) {
     return http.post(`/api/release/std/designer/market/api/list`, {
       centerCode: getUrlParams('appCenterCode'),
-      version: getUrlParams('centerVersion')
+      version: getUrlParams('centerVersion'),
+      ...params
     })
   },
 

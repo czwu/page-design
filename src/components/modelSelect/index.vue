@@ -14,7 +14,7 @@
       <span v-if="data.label && data.label !== node.label" class="name">
         {{ data.label }}
       </span>
-      <el-tooltip v-if="data.fields" class="item" effect="dark" content="添加子字段" placement="top">
+      <el-tooltip v-if="data.fields && data.id !== 'props'" class="item" effect="dark" content="添加子字段" placement="top">
         <span class="el-icon-circle-plus-outline" @click="iconClick(data)" />
       </el-tooltip>
     </template>

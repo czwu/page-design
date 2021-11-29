@@ -120,7 +120,7 @@ export default class BaseCompile {
      const events = meta.events ? this.compileEvents(meta.events, ctx) : ''
 
      const customAttr = meta.design.customAttr || ''
-     const vif = meta.design.vif ? `v-if='${meta.design.vif}'` : ''
+     const vif = meta.design.vif ? `v-if='${meta.design.vif}'` : ""
      const html = `<${tagName} ${vfor}  ${vif} ${data}  ${vmodel} ${slotName} ${propsHtml} ${customAttr} ${css} ${ref} ${styles} ${events}>
       ${childHtml}
       ${slotsHtml}
@@ -244,11 +244,15 @@ export default class BaseCompile {
    compileEvents(events, ctx) {
      const isInTable = ctx.path.some(item => item.name === 'table')
      const isInTree = ctx.path.some(item => item.name === 'tree')
+     const isInGrid = ctx.path.some(item => item.name === 'grid')
      let param = ''
+
      if (isInTable) {
        param = '(scope.row, scope)'
      } else if (isInTree) {
        param = '(data)'
+     } else if (isInGrid) {
+       param = ctx.path.some(item => item.slot === 'toolbar') ? '' : '(scope.row, scope)'
      }
      return Object.keys(events).map(name => {
        const event = events[name]

@@ -53,6 +53,16 @@ context.components['v-template'] = {
             help: '自定义HTML代码,建议在预览模式编写模板并调试代码,然后复制到此处'
           },
           {
+            
+              label: '描述',
+              mapping: 'design.desc',
+              type: 'input',
+              value: '',
+              clearable: true,
+              help: '用于描述该组件用途'
+            
+          },
+          {
             label: '内部权限控制',
             type: '$list',
             mapping: 'design.perms',

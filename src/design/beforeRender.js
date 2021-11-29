@@ -64,8 +64,9 @@ export default function designRender(renderOpts = {}, h) {
     }
   }
   if (renderOpts.name === 'v-template') {
+    let desc = renderOpts.design.desc || '自定义组件占位符'
     const myCom = Vue.extend({
-      template: `<div> 自定义模板 占位符 </div>`
+      template: `<div> ${desc} </div>`
     })
     renderOpts.children = [h(myCom)]
   } else if (renderOpts.name === 'async-component') {

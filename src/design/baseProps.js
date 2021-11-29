@@ -2,6 +2,7 @@ import { getComponentId, options, uuid } from '@/utils/util'
 import constants from '@/common/constants'
 import { bus, EVENTS } from '@/common/eventBus'
 import i18n from '@/render/src/utils/i18n'
+import { tipsPlacement } from './uploadFile/fileFormat'
 export default {
   common: {
     // 组件ID, 只读
@@ -386,7 +387,7 @@ export default {
       return {
         label: '渲染条件',
         mapping: 'design.vif',
-        type: 'input',
+        type: 'expression',
         value: '',
         help: '设置条件表达式,表达式满足时,该组件才会渲染'
       }
@@ -500,7 +501,7 @@ export default {
           label: '提示位置',
           mapping: 'design.tipPlacement',
           type: 'select',
-          options: ['top', 'top-start', 'top-end', 'bottom', 'bottom-start', 'bottom-end', 'left', 'left-start', 'left-end', 'right', 'right-start', 'right-end'],
+          options: tipsPlacement,
           value: 'top',
           help: 'Tooltip 的出现位置',
           vif: 'design.tooltip'

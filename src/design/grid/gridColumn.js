@@ -91,7 +91,7 @@ context.components['grid-column'] = {
             mapping: 'editable',
             help: '是否启用单元格编辑功能'
           },
-          baseProps.common.width({ mapping: 'width', help: '对应列的宽度' }),
+          baseProps.common.width({ mapping: 'width', type: 'input', help: '对应列的宽度', format: null }),
           {
             label: '内容对齐',
             type: 'radio',
@@ -103,7 +103,7 @@ context.components['grid-column'] = {
             label: '表头对齐',
             type: 'radio',
             value: '',
-            mapping: 'header-align',
+            mapping: 'headerAlign',
             options: options({ '': '靠左', center: '居中', right: '靠右' }),
             help: '表头对齐方式，若不设置该项，则使用表格的对齐方式'
           },

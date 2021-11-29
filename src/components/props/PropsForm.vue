@@ -8,6 +8,7 @@
               <props-form
                 v-if="check(prop)"
                 :properties="prop.properties"
+                :all-props="allProps"
                 :data="propsData"
               />
             </el-collapse-item>
@@ -18,6 +19,7 @@
             v-if="check(prop)"
             :key="prop._id_"
             :properties="prop.properties"
+            :all-props="allProps"
             :class="prop.class"
             :data="propsData"
           />
@@ -118,6 +120,12 @@ export default {
         return []
       }
     },
+    allProps: {
+      type: Array,
+      default() {
+        return []
+      }
+    },
     // 组件配置属性
     data: {
       type: Object,
@@ -131,6 +139,7 @@ export default {
       currOpField: null, // 当前操作的配置对象
       propsData: this.data,
       fields: [],
+      allFields: [],
       propsType: '',
       activeName: '常用配置',
       isInner: !!this.$parent.name,
@@ -147,6 +156,9 @@ export default {
       }
       this.sync2Value()
     },
+    allProps(newval) {
+      this.allFields = newval
+    },
     data(newval) {
       this.propsData = newval
       this.currId = this.propsData.uuid
@@ -155,6 +167,7 @@ export default {
   },
   created() {
     this.fields = this.properties
+    this.allFields = this.allProps
     if (this.fields[0] && this.fields[0].group) {
       this.activeName = this.fields[0].group
     }
@@ -205,30 +218,32 @@ export default {
       }
       return ret
     },
-    sync2Value() {
+    sync2Value(field = this.allFields) {
       // 将属性数据同步到 属性编辑器中
-      this.fields &&
-        this.fields.forEach((field, i) => {
-          if (field.mapping) {
-            const val = getValueByPath(this.propsData, field.mapping)
-            if (val !== undefined && val !== null) {
-              if (
-                !Array.isArray(val) &&
+      field.forEach((field, i) => {
+        if (field.mapping) {
+          const val = getValueByPath(this.propsData, field.mapping)
+          if (val !== undefined && val !== null) {
+            if (
+              !Array.isArray(val) &&
                 typeof val === 'object' &&
                 typeof field.value === 'object'
-              ) {
-                Object.assign(field.value, val)
-              } else {
-                field.value = val
-              }
+            ) {
+              Object.assign(field.value, val)
+            } else {
+              field.value = val
             }
           }
-          if (field.columns) {
-            field.columns.forEach(col => {
-              col.mode = 'list'
-            })
-          }
-        })
+        }
+        if (field.columns) {
+          field.columns.forEach(col => {
+            col.mode = 'list'
+          })
+        }
+        if (field.group) {
+          this.sync2Value(field.properties)
+        }
+      })
     },
     // 将数据同步到propsData中
     sync2PropsData(field, value) {

@@ -64,7 +64,8 @@
               class="flex-col flex-grow"
             >
               <div class="code-tools">
-                <el-button type="info" icon="el-icon-info" size="mini" @click="showDrawer">通用代码提示</el-button>
+                <el-button type="info" icon="el-icon-view" size="mini" @click="showDrawer('reViewScript')">预览全局脚本</el-button>
+                <el-button type="info" icon="el-icon-info" size="mini" @click="showDrawer('tips')">通用代码提示</el-button>
                 <el-button type="primary" icon="p-icon-save" size="mini" @click="saveCode">保存</el-button>
               </div>
               <div id="jscodeeditor" class="flex-col flex-grow" />
@@ -81,7 +82,7 @@
         </div>
       </div>
     </el-dialog>
-    <code-tips-drawer :visible.sync="drawer" />
+    <code-tips-drawer :showDrawer="drawer" :jsCode="jsCode" :title ="drawerTitle" @hideCodeTipsDrawer="drawer = false"></code-tips-drawer>
   </div>
 </template>
 
@@ -94,6 +95,7 @@ import PropsForm from '@/components/props/PropsForm'
 import loadMonaco from '@/utils/loadMonaco'
 import { parse } from '@babel/parser'
 import util from './eventUtil'
+import { compile } from '@/compile/common/compile'
 import CodeTipsDrawer from './codeTipsDrawer'
 var monaco, editorObj
 export default {
@@ -112,6 +114,8 @@ export default {
       actionProps: null,
       actionData: null,
       visible: false,
+      jsCode:"",
+      drawerTitle:'',
       drawer: false,
       behaviors: [
         { label: '页面初始化', value: 'PageInit', active: true },
@@ -254,8 +258,16 @@ export default {
           type !== 'inner')
       )
     },
-    showDrawer() {
-      this.drawer = true
+    showDrawer(type) {
+      if (type === 'reViewScript'){
+        this.jsCode = compile.compile(this.pageMeta).js;
+        this.drawerTitle = '预览全局脚本'
+      }
+      if(type === 'tips') {
+        this.jsCode = "";
+        this.drawerTitle = '通用代码提示'
+      }
+      this.drawer = true;
     },
     closeHandler() {
       context.currEventMeta = null

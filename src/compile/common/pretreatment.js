@@ -1,4 +1,5 @@
 import i18n from '@/render/src/utils/i18n'
+import { treeEach } from './util'
 import componentsPretreatment from '../comps/index'
 
 /**
@@ -165,19 +166,38 @@ function optionsConvert(meta, ctx) {
     'select': 'el-option'
   })
   const childTag = tagMap[meta.name]
+
   if (meta.design.dataType === 'static' && meta.design.options) {
+    const datatype = findFieldDataType(ctx, meta.design.vmodel)
     meta.children = meta.design.options.map(opt => {
+      const val = datatype === 'Integer' ? opt.value * 1 : opt.value
       return {
         name: childTag,
         props: {
-          label: meta.name === 'select' ? i18n.t(opt.label) : opt.value,
-          value: meta.name === 'select' ? opt.value : ''
+          label: meta.name === 'select' ? i18n.t(opt.label) : val,
+          value: meta.name === 'select' ? val : ''
         },
         design: {},
         children: meta.name === 'select' ? null : i18n.t(opt.label)
       }
     })
   }
+}
+
+function findFieldDataType(ctx, fieldId) {
+  if (!ctx.pageMeta) {
+    return
+  }
+  const model = ctx.pageMeta.models.find(m => m.id === fieldId.split('.')[0])
+  let dataType = 'String'
+  if (model) {
+    treeEach(model.fields, (item) => {
+      if (item.id === fieldId) {
+        dataType = item.dataType
+      }
+    }, 'fields')
+  }
+  return dataType
 }
 
 function layoutConvert(meta, ctx, type) {

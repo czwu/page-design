@@ -16,6 +16,7 @@ context.components['v-table'] = {
       props: {
         showHeader: true,
         hasPagination: false
+
       },
       design: {
       },
@@ -25,7 +26,8 @@ context.components['v-table'] = {
       children: tableMeta,
       slots: [
         getHeaderMeta(),
-        ''
+        '',
+        getPagination()
       ]
     }
   },
@@ -133,6 +135,7 @@ context.components['v-table'] = {
               } else {
                 meta.props.hasPagination = false
               }
+              return true
             },
             vif(meta) { return meta.children.design.dataType === 'api' }
           }, {
@@ -395,11 +398,25 @@ context.components['v-table'] = {
                 mapping: 'children.props.highlight-current-row',
                 help: '是否要高亮当前行'
               }, {
-                label: '自定义分页',
+                label: '分页器',
                 type: 'bool',
                 value: false,
                 mapping: 'props.hasPagination',
-                help: '是否使用自定义的分页数据'
+                help: '是否使用分页器'
+              }, {
+                label: '分页插槽',
+                type: 'bool',
+                value: false,
+                mapping: 'props.showPaginationSlot',
+                vif: 'props.hasPagination',
+                onChange(val, meta) {
+                  if (val) {
+                    meta.slots[2] = getPagination()
+                  } else {
+                    meta.slots[2] = ''
+                  }
+                },
+                help: '开启后，用户可以自定义分页器区域'
               }
 
             ]
@@ -414,6 +431,15 @@ context.components['v-table'] = {
               meta.children.design.pageSize = val
             },
             help: '默认的分页尺寸'
+          },
+          {
+            label: '分页器顺序',
+            mapping: 'props.pageLayout',
+            type: 'select',
+            multiple: true,
+            options: ['sizes', 'prev', 'pager', 'next', 'jumper', '->', 'total', 'slot'],
+            value: ['sizes', '->', 'slot', 'prev', 'pager', 'next', 'jumper', 'total'],
+            vif: 'props.hasPagination'
           },
           {
             label: '选择函数',
@@ -577,6 +603,17 @@ function getHeaderMeta() {
     slot: 'header',
     design: {
       mapping: 'slots.0',
+      span: 24,
+      layout: 'row'
+    },
+    children: []
+  })
+}
+function getPagination() {
+  return Object.assign(context.getConfig('layout'), {
+    slot: 'pagination',
+    design: {
+      mapping: 'slots.2',
       span: 24,
       layout: 'row'
     },

@@ -152,6 +152,10 @@ context.components.grid = {
                 if (!meta.design.initApi.isSeniorQuery) {
                   delete meta.design.initApi.conditionList
                   delete meta.design.initApi.sortList
+                } else {
+                  meta.design.initApi.sortList = []
+                  meta.design.initApi.conditionList = []
+                  meta.props['toolbar-config'].seniorQuery = true
                 }
                 meta.props['footer-action-config'].showPager = api.responseType === 'Page'
                 return true
@@ -194,6 +198,14 @@ context.components.grid = {
             },
             vif(meta) { return meta.design.initApi && meta.design.initApi.apiUcode },
             help: '可设置表格初始化查询的参数'
+          },
+          {
+            label: 'loading',
+            mapping: 'design.showLoading',
+            type: 'bool',
+            value: true,
+            help: '是否显示数据加载loading',
+            vif(meta) { return meta.design.initApi && meta.design.initApi.apiUcode },
           }
         ]
       },
@@ -372,6 +384,15 @@ context.components.grid = {
             ]
           },
           {
+            label: '主键字段',
+            // type: 'input',
+            type: 'field-select',
+            value: '',
+            params: meta,
+            mapping: 'props.rowId',
+            help: '表格数据的唯一标识字段名,默认值为id'
+          },
+          {
             label: '分页尺寸',
             mapping: 'props.footer-action-config.pageConfig.pageSize',
             type: 'select',
@@ -392,13 +413,6 @@ context.components.grid = {
               save: '保存'
             }),
             mapping: 'design.buttons',
-            help: '表格数据的唯一标识字段名,默认值为id'
-          },
-          {
-            label: '主键字段',
-            type: 'input',
-            value: '',
-            mapping: 'props.rowId',
             help: '表格数据的唯一标识字段名,默认值为id'
           },
           {

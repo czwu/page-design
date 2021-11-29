@@ -9,12 +9,14 @@ import VChart from '@/components/chart/'
 import PUploadImg from '@/components/upload-img'
 import Validator from '@/components/validator/'
 import vTable from '@/components/vTable/'
+import ExpressionSetting from "@/components/expressionSetting"
 
 export default {
   install: (vue) => {
     vue.component(vTable.name, vTable)
     vue.component(IconSelect.name, IconSelect)
     vue.component(I18nSelect.name, I18nSelect)
+    vue.component(ExpressionSetting.name, ExpressionSetting)
     vue.component(ModelSelect.name, ModelSelect)
     vue.component(FieldSelect.name, FieldSelect)
     vue.component(ActionSelect.name, ActionSelect)

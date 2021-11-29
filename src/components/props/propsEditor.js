@@ -312,10 +312,10 @@ Editors.register('compMethod', (prop, changeFn) => {
 // 页面方法选择器
 Editors.register('method', (prop, changeFn) => {
   const metadata = window.getMetaManager()
-  var options = metadata.meta.events.codeMethods.children.map(item => item.name)
+  var options = metadata.meta.events.codeMethods.children.map(item => {return {label:`自定义函数:${item.id}`,value:item.id}} )
   // 判断 是否只需要自定义的代码函数
   if (!prop.onlyCode) {
-    options.push(...metadata.meta.events.methods.children.map(item => item.name))
+    options.push(...metadata.meta.events.methods.children.map(item => {return {label:`编排函数 ${item.label }:${item.name}`,value:item.name}}))
   }
   options.push({ label: '页面Init', value: 'init' })
   metadata.compEach(metadata.meta.children, (item) => {
@@ -460,6 +460,21 @@ Editors.register('validator', (prop, changeFn) => {
 Editors.register('icon', (prop, changeFn) => {
   return {
     name: 'icon-select',
+    props: {
+      value: prop.value,
+      size: 'mini'
+    },
+    on: {
+      input: (value) => {
+        changeFn({ value, prop })
+      }
+    }
+  }
+})
+// 图标选择编辑器
+Editors.register('expression', (prop, changeFn) => {
+  return {
+    name: 'expression-setting',
     props: {
       value: prop.value,
       size: 'mini'

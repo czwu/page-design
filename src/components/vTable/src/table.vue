@@ -64,7 +64,7 @@
     <div v-if="hasPagination" class="v-table-footer">
       <el-pagination
         class="p-el-pagination"
-        layout="sizes,->,total,jumper,prev,pager,next"
+        :layout="layout"
         :page-sizes="[10, 20, 30, 50, 100]"
         :current-page="pagination.pageNum"
         :page-size="pagination.pageSize"
@@ -73,7 +73,9 @@
         @current-change="pageChange"
         @prev-click="pageChange"
         @next-click="pageChange"
-      />
+      >
+        <slot v-if="showPaginationSlot" name="pagination"></slot>
+      </el-pagination>
     </div>
   </div>
 </template>
@@ -108,17 +110,30 @@ export default {
     searchModel: { type: Object, default: () => {} },
     // 是否显示分页组件
     hasPagination: { type: Boolean, default: false },
+    showPaginationSlot: { type: Boolean, default: false },
     // 是否显示分页组件
     pagination: {
       type: Object,
       default() {
         return { pageNum: 1, pageSize: 10, total: 0 }
       }
-    }
+    },
+    pageLayout:{
+      type: Array,
+      default() {
+        return ['sizes','slot','next','pager','prev','jumper','total']
+        // return ['sizes','->','total','jumper','prev','pager','next']
+      },
+    },
   },
   data() {
     return {
       cols: []
+    }
+  },
+  computed: {
+    layout() {
+      return this.pageLayout.join(',');
     }
   },
   created() {

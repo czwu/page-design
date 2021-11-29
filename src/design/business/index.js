@@ -183,6 +183,9 @@ function getConfig(data) {
   }
   // delete config.created
   delete config.mounted
+  Object.keys(config.methods).forEach(ele => {
+    config.methods[ele] = function(){}
+  })
   Object.keys(config.props).forEach(ele => {
     if (typeof config.props[ele] === 'function') {
       config.props[ele] = undefined

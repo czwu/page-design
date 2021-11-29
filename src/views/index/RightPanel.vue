@@ -13,6 +13,7 @@
         v-if="activeName === 'properties' && compProps && compData"
         :properties="compProps"
         :data="compData"
+        :all-props="compProps"
         class="scroll-y flex-grow"
       />
       <page-props v-if="activeName === 'properties' && showPageProps" />
@@ -22,6 +23,7 @@
       <props-form
         v-if="activeName === 'properties' && childProps && childData"
         :properties="childProps"
+        :all-props="childProps"
         :data="childData"
         class="scroll-y flex-grow"
       />
@@ -132,8 +134,8 @@ export default {
 }
 .child-editor{
     position: absolute;
-    right: 282px;
-    width: 280px;
+    right: 300px;
+    width: 300px;
     max-height:300px;
     max-height:calc(100% - 70px);
     overflow-y:auto;

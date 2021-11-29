@@ -239,6 +239,131 @@ function clone(any) {
   return any
 }
 
+//判断是否为对象
+function isObject(obj) {
+  let type = Object.prototype.toString.call(obj);
+  if (type === '[object Object]') {
+    return true;
+  }
+}
+/**
+ * 根据路径删除对象的属性
+ * @param func 是要去抖的函数
+ * @param wait 需要延迟执行的时间
+ * @param options.leading 是否在超时前调用
+ * @param options.maxWait 函数延迟调用的最大时间
+ * @param options.trailing 是否在超时后调用
+*/
+function debounce(func, wait, options = {}) {
+  //声明参数
+  let lastArgs,//上次调用参数
+    lastThis,//上次调用this
+    maxWait,//最大等待时间
+    result,//返回结果
+    timerId,
+    lastCallTime;//上次调用debounced时间，即出发时间，不一定会调用func
+
+  //参数初始化let
+  let lastInvokeTime = 0;//上次调用func时间，即成功执行时间
+  let leading = false;//是否在超时之前调用
+  let maxing = false;//是否传入最大超时时间
+  let trailing = true;//是否超时之后调用
+  if (typeof func !== 'function') {
+    throw new TypeError('debounce的第一个参数类型为funtion')
+  }
+  wait = +wait || 0; //+wait 作用就是转变wait的数据类型，变成Number类型 传入的执行时间间隔
+  if (isObject(options)) {
+    leading = !!options.leading;
+    maxing = options.maxWait;
+    maxWait = options.maxWait ? Math.max(Number(options.maxWait) || 0, wait) : maxWait;
+    trailing = !!options.trailing || trailing;
+  }
+  function invokeFunc(time) {//调用function 参数为当前时间
+    let args = lastArgs;
+    let thisArg = lastThis;
+    lastArgs = lastThis = undefined;
+    lastInvokeTime = time;//将上次调用时间重置为当前时间
+    result = func.apply(thisArg, args);//执行传入
+    return result
+  }
+  function leadingEdge(time) {//超时之前调用
+    lastInvokeTime = time;
+    timerId = setTimeout(timerExpired, wait);//开始timer 为trailing Edge触发函数调用设定定时器 如果leading为 true 后续执行条件不满足就不会执行func
+    return leading ? invokeFunc(time) : result;
+  }
+  function remainingWait(time) {//设置还需要等待的时间
+    const timeSinceLastCall = time - lastCallTime,//距离上次debounced函数被调用的时间
+      timeSinceLastInvoke = time - lastInvokeTime,//距离上次func函数被执行的时间
+      result = wait - timeSinceLastCall;//还需要等待的时间 计算出下一次trailing的位置
+    //maxing就是options.maxWait  两种情况
+    // 设置了maxing 比较下一次maxing和下一次trailing的最小值，作为下一次函数要执行的时间
+    //无max 在下一次trailing时执行 timerExpired
+    return maxing ? Math.min(result, maxWait - timeSinceLastInvoke) : result
+  }
+
+  //根据时间判断func能否被执行
+  function shouldInvoke(time) {//是否应该被调用
+    const timeSinceLastCall = time - lastCallTime,//距离上次触发时间的时间
+      timeSinceLastInvoke = time - lastInvokeTime;//距离上次调用func的时间
+    return (lastCallTime === undefined //从未执行过也就是首次调用
+      || (timeSinceLastCall >= wait) //距离上次被调用的时间超过了wait的时间
+      || (timeSinceLastCall < 0)//系统时间倒退？？
+      || (maxing && timeSinceLastInvoke >= maxWait))//超过最大等待时间
+  }
+
+  function timerExpired() {  //定时器的回调函数 用来判断是否执行func
+    const time = Date.now();
+    //在 options.trailing  edge且时间符合条件时候 调用trailingEdge函数，否则重启定时器
+    if (shouldInvoke(time)) {
+      return trailingEdge(time);
+    }
+    //重启定时器 保证下一次时延的末尾触发
+    timerId = setTimeout(timerExpired, remainingWait(time))
+  }
+  function trailingEdge(time) {//超时之后被调用 trailing = true;options里声明的变量默认为 true
+    timerId = undefined;
+    //有lastArgs才执行，意味着只有func已经被debounced过一次以后才会在trailing edge执行
+    if (trailing && lastArgs) {
+      return invokeFunc(time);
+    }
+    lastArgs = lastThis = undefined;
+    return result;
+  }
+  function cancle() {
+    if (timerId !== undefined) {
+      clearTimeout(timerId);
+    }
+    lastInvokeTime = 0;
+    lastArgs = lastCallTime = lastThis = timerId = undefined;
+  }
+  function flush() {
+    return timerId === undefined ? result : trailingEdge(Date.now())
+  }
+  function debounced(...args) {
+    const time = Date.now(),//获取到当前的时间
+    isInvoking = shouldInvoke(time);//判断是否可以调用
+    lastArgs = args;
+    lastThis = this;
+    lastCallTime = time;//Date.now()
+    if (isInvoking) {
+      if (timerId === undefined) {
+        return leadingEdge(lastCallTime);
+      }
+      if (maxing) {
+        timerId = setTimeout(timerExpired, wait);
+        return invokeFunc(lastCallTime);
+      }
+    }
+    if (timerId === undefined) {
+      timerId = setTimeout(timerExpired, wait);
+    }
+    return result;
+  }
+  debounced.cancel = cancle;
+  debounced.flush = flush;
+  return debounced;
+}
+
 function dateToDiffText(dateTimeStamp) {
   var minute = 1000 * 60
   var hour = minute * 60
@@ -339,5 +464,6 @@ export {
   getOffset,
   treeEach,
   getRowIndex,
-  copyText
+  copyText,
+  debounce
 }

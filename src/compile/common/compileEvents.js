@@ -45,8 +45,9 @@ export default function compileEvents(meta, ctx) {
 function compileEvent(eventName, meta, ctx) {
   const isInTable = ctx.path.some(item => item.name === 'table')
   const isInTree = ctx.path.some(item => item.name === 'tree')
+  const isInGrid = ctx.path.some(item => item.name === 'grid')
   let param = ''
-  if (isInTable || isInTree) {
+  if (isInTable || isInTree || isInGrid) {
     param = true
   }
   if (meta.name === 'table' || meta.name === 'tree') {
@@ -497,8 +498,12 @@ function compileInitApi(meta, ctx) {
     } else {
       params = meta.insertInitFn ? `Object.assign({},${params},newParam && newParam.isCtx ? {} : newParam)` : params
     }
-    const header = api.type === 'post' ? `,{headers:common.$requestHeaders}` : ''
+    let header = api.type === 'post' ? `,{headers:common.$requestHeaders}` : ''
     params = api.type === 'get' ? `{params:${params},headers:common.$requestHeaders}` : params
+    if(isGrid) {
+      header = api.type === 'post' ? `,{headers:Object.assign({loading:${meta.design.showLoading}}, common.$requestHeaders)}` : ''
+      params = api.type === 'get' ? `{params:${params},headers:Object.assign({loading:${meta.design.showLoading}}, common.$requestHeaders)}` : params
+    }
     // api返回值需要适配
     let adaptCode = ''
     const pageCode = meta.name === 'table' ? ` this.${meta.pid}_pagination.total = res.data.data.total` : ''

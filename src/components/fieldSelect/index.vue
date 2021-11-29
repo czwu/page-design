@@ -80,6 +80,23 @@ export default {
           this.list = fields.map(item => {
             return { value: item.name }
           })
+        } else if(this.params.props[':data']) {
+          // 设置动态表格主键字段下拉数据
+          const list = metadata.meta.models.map(model => {
+            return {
+              id: model.name,
+              children: model.fields
+            }
+          })
+          let fields = []
+          treeEach(list, (item) => {
+            if (item.id === this.params.props[':data']) {
+              fields = item.children
+            }
+          })
+          this.list = fields.map(item => {
+            return { value: item.name }
+          })
         }
       }
     }

@@ -13,15 +13,23 @@
             v-model="interfaceName"
             placeholder="名称/路径"
             clearable
+            class="input-width-select"
             style="width: 100%; border-color: #ecf5e8"
             size="small"
             @keyup.native="filterInterface(true)"
           >
+          <el-select  v-model="queryTypeVal" slot="prepend" @change="filterInterface">
+                <el-option v-for="item in queryType"
+                           :key="item.value"
+                           :label="item.label"
+                           :value="item.value"></el-option>
+              </el-select>
             <i slot="suffix" class="el-input__icon el-icon-search" />
           </el-input>
         </div>
         <div class="flex-col flex-grow" style="overflow: hidden">
           <el-tree
+            default-expand-all
             :data="treeData"
             :props="defaultProps"
             style="overflow-y: auto; background: #ecf5e8"
@@ -87,7 +95,17 @@
               :tree-props="{ children: 'childNode' }"
               class="flex-grow"
             >
-              <el-table-column label="名称" prop="fieldName" />
+              <el-table-column label="名称" prop="fieldName" > 
+                <template slot-scope="scope" >
+                <template v-if="scope.row.fieldName.toLowerCase() === 'baselist'">
+                  <span> {{ scope.row.fieldName  }}</span>
+                  <el-tooltip content="发起请求时此变量不会采用key-value的方式，而是直接发送value" placement="top" effect="dark">
+                    <i class="el-icon-info" />
+                  </el-tooltip>
+                </template>
+                <span v-else> {{ scope.row.fieldName  }}</span>
+              </template>
+              </el-table-column>
               <el-table-column label="备注" prop="fieldRemark" align="" />
               <el-table-column label="类型" prop="fieldType" align="">
                 <template slot-scope="scope">
@@ -154,7 +172,7 @@
 <script>
 import service from '@/common/service'
 import Metadata from '@/common/metadata'
-import { dateToDiffText, uuid } from '@/utils/util'
+import { dateToDiffText, uuid, debounce } from '@/utils/util'
 import { bus, EVENTS } from '@/common/eventBus'
 import model from '@/common/datamodel'
 export default {
@@ -186,7 +204,13 @@ export default {
       maxHeight: '400px',
       headers: [],
       viewMode: false,
-      apiMap: {}
+      apiMap: {},
+      queryType: [
+        {value:'apiPath',label:'路径' },
+        {value:'apiName',label:'名称' },
+        {value:'categoryName',label:'分类' },
+      ],
+      queryTypeVal:'apiName',
     }
   },
 
@@ -205,31 +229,58 @@ export default {
     })
     // const isLuoma =
     //   location.hostname.startsWith('luoma') || getUrlParams('luoma')
-    service.queryApi().then((res) => {
-      if (res.data.length) {
-        res.data.map((item) => {
-          const val = JSON.parse(
-            JSON.stringify(item)
-              .replace(/projectName/g, 'interfaceName') // 替换项目字段为应用字段
-              .replace(/centerName/g, 'interfaceName') // 替换中心字段为应用字段
-              // .replace(isLuoma ? '------' : /applicationName/g, 'interfaceName') // 替换中心字段为应用字段
-              .replace(/categoryName/g, 'interfaceName')
-              .replace(/centers/g, 'apis') // 替换中心集合字段为应用集合
-              .replace(/applications/g, 'apis') // 替换中心集合字段为应用集合
-              .replace(/categoryList/g, 'apis')
-              .replace(/apiList/g, 'apis')
-          )
-          this.treeData.push(val)
-        })
-        this.treeDataBuffer = this.treeData
-      }
-    })
+    // service.queryApi().then((res) => {
+    //   if (res.data.length) {
+    //     res.data.map((item) => {
+    //       const val = JSON.parse(
+    //         JSON.stringify(item)
+    //           .replace(/projectName/g, 'interfaceName') // 替换项目字段为应用字段
+    //           .replace(/centerName/g, 'interfaceName') // 替换中心字段为应用字段
+    //           // .replace(isLuoma ? '------' : /applicationName/g, 'interfaceName') // 替换中心字段为应用字段
+    //           .replace(/categoryName/g, 'interfaceName')
+    //           .replace(/centers/g, 'apis') // 替换中心集合字段为应用集合
+    //           .replace(/applications/g, 'apis') // 替换中心集合字段为应用集合
+    //           .replace(/categoryList/g, 'apis')
+    //           .replace(/apiList/g, 'apis')
+    //       )
+    //       this.treeData.push(val)
+    //     })
+    //     this.treeDataBuffer = this.treeData
+    //   }
+    // })
+    this.getTreeData();
   },
   mounted() {
     this.maxHeight = parseInt(document.body.clientHeight * 0.85 - 240) + 'px'
   },
 
   methods: {
+   getTreeData(params = {}) {
+      service.queryApi(params).then((res) => {
+      if (res.data.length) {
+        let listData = []
+        res.data.map((item) => {
+          const val = JSON.parse(
+              JSON.stringify(item)
+                .replace(/projectName/g, 'interfaceName') // 替换项目字段为应用字段
+                .replace(/centerName/g, 'interfaceName') // 替换中心字段为应用字段
+                // .replace(isLuoma ? '------' : /applicationName/g, 'interfaceName') // 替换中心字段为应用字段
+                .replace(/categoryName/g, 'interfaceName')
+                .replace(/centers/g, 'apis') // 替换中心集合字段为应用集合
+                .replace(/applications/g, 'apis') // 替换中心集合字段为应用集合
+                .replace(/categoryList/g, 'apis')
+                .replace(/apiList/g, 'apis')
+            )
+            listData.push(val)
+          })
+          if(Object.keys(params).length === 0) {
+            // 如果对象为空请求的就是所有数据，保存起来
+            this.treeDataBuffer = listData
+          }
+          this.treeData = listData
+        }
+      })
+    },
     cancel() {
       this.visible = false
     },
@@ -244,7 +295,6 @@ export default {
     tabChange() {},
     // 点击树节点
     handleClickNode(item) {
-      console.log(item)
       // 没有apis，代表是接口，而不是分类
       if (item && !item.hasOwnProperty('apis')) {
         this.getInterfaceDetail(item.apiUcode)
@@ -303,31 +353,42 @@ export default {
         }
       })
     },
-    filterInterface(resetTreeData, interfaceList) {
-      // 清空，显示全部
-      if (!this.interfaceName) {
+    // filterInterface(resetTreeData, interfaceList) {
+    //   // 清空，显示全部
+    //   if (!this.interfaceName) {
+    //     this.treeData = this.treeDataBuffer
+    //     return
+    //   }
+    //   // 搜索，不显示目录，只显示接口
+    //   if (resetTreeData) {
+    //     this.treeData = []
+    //   }
+    //   var list = interfaceList || this.treeDataBuffer
+    //   var len = list.length
+    //   var reg = new RegExp(this.interfaceName)
+    //   for (var i = 0; i < len; i++) {
+    //     if (list[i].apis && list[i].apis.length) {
+    //       this.filterInterface(false, list[i].apis)
+    //     } else if (
+    //       list[i].interfaceName.match(reg) ||
+    //       (list[i].fullPath && list[i].fullPath.match(reg))
+    //     ) {
+    //       // 如果字符串中不包含目标字符会返回-1
+    //       this.treeData.push(list[i])
+    //     }
+    //   }
+    // },
+    filterInterface: debounce(async function (){
+      //清空，显示全部
+      if(this.interfaceName == '') {
         this.treeData = this.treeDataBuffer
         return
       }
-      // 搜索，不显示目录，只显示接口
-      if (resetTreeData) {
-        this.treeData = []
-      }
-      var list = interfaceList || this.treeDataBuffer
-      var len = list.length
-      var reg = new RegExp(this.interfaceName)
-      for (var i = 0; i < len; i++) {
-        if (list[i].apis && list[i].apis.length) {
-          this.filterInterface(false, list[i].apis)
-        } else if (
-          list[i].interfaceName.match(reg) ||
-          (list[i].fullPath && list[i].fullPath.match(reg))
-        ) {
-          // 如果字符串中不包含目标字符会返回-1
-          this.treeData.push(list[i])
-        }
-      }
-    },
+      let params = {}
+      params[this.queryTypeVal] = this.interfaceName
+      this.getTreeData(params);
+      this.$forceUpdate()
+    }, 500),
     addApi(apiDetail) {
       if (
         Metadata.meta.apis.filter((api) => api.apiUcode === apiDetail.apiUcode)
@@ -428,4 +489,16 @@ export default {
 ::v-deep .el-dialog__body {
   padding: 0 20px;
 }
+.input-width-select{
+  font-size: 14px;
+}
+::v-deep .input-width-select .el-input-group__prepend {
+  width: 50px;
+}
+i.el-icon-info {
+    color: burlywood;
+    margin-left: 2px;
+    vertical-align: middle;
+    cursor: pointer;
+  }
 </style>
